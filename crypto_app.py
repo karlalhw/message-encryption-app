@@ -1,6 +1,7 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
+import json
 
 # Main menu function
 
@@ -38,7 +39,23 @@ def encrypt_message():
     print(f"Encrypted message (base64): {encoded_ciphertext}")
     return key, nonce, ciphertext, tag
 
-# Decrypt message function
+
+# Save encrypted data function
+def save_encrypted_data(key, nonce, ciphertext, tag, filename):
+    try:
+        data = {
+            "key": base64.b64encode(key).decode(),
+            "nonce": base64.b64encode(nonce).decode(),
+            "ciphertext": base64.b64encode(ciphertext).decode(),
+            "tag": base64.b64encode(tag).decode()
+        }
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=4)
+            print(f"Encrypted data saved to {filename}")
+    except Exception as e:
+        print(f"Error saving data to {filename}: {e}")
+
+        # Decrypt message function
 
 
 def decrypt_message(key, nonce, ciphertext, tag):
