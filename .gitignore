@@ -208,4 +208,4 @@ __marimo__/
 
 # Test wallet JSON
 test_wallet.json
-wallet_data_*.json
+wallet_data*.json
