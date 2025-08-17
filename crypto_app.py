@@ -2,6 +2,7 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
 import json
+from datetime import datetime
 
 # Main menu function
 
@@ -24,8 +25,7 @@ def main_menu():
             print("Invalid input. Please enter a number between 1 and 3.")
 
 
-# Encrypt message function
-
+# Encrypts a wallet private key with AES-256 and saves to a unique JSON file
 
 def encrypt_message():
     key = get_random_bytes(32)
@@ -37,6 +37,9 @@ def encrypt_message():
     ciphertext, tag = cipher.encrypt_and_digest(message)
     encoded_ciphertext = base64.b64encode(ciphertext).decode()
     print(f"Encrypted message (base64): {encoded_ciphertext}")
+    # Generate .JSON file name via datetime and save encrypted data
+    filename = f"wallet_data{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.json"
+    save_encrypted_data(key, nonce, ciphertext, tag, filename)
     return key, nonce, ciphertext, tag
 
 
