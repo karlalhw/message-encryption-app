@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 import os
 import fnmatch
+import binascii
 
 # Main menu function
 
@@ -32,6 +33,7 @@ def main_menu():
 def encrypt_message():
     key = get_random_bytes(32)
     print(f"Generated key (base64 encoded): {base64.b64encode(key).decode()}")
+    print("WARNING: Save this key securely (e.g., in a password manager), you will need it to decrypt.")
     # Ask for user input for encryption
     message = input("Enter a message to encrypt: ").encode()
     cipher = AES.new(key, AES.MODE_EAX)
@@ -41,15 +43,14 @@ def encrypt_message():
     print(f"Encrypted message (base64): {encoded_ciphertext}")
     # Generate .JSON file name via datetime and save encrypted data
     filename = f"wallet_data{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.json"
-    save_encrypted_data(key, nonce, ciphertext, tag, filename)
+    save_encrypted_data(nonce, ciphertext, tag, filename)
     return key, nonce, ciphertext, tag
 
 
-# Save encrypted data function
-def save_encrypted_data(key, nonce, ciphertext, tag, filename):
+# Save encrypted data function, excluding the key for security
+def save_encrypted_data(nonce, ciphertext, tag, filename):
     try:
         data = {
-            "key": base64.b64encode(key).decode(),
             "nonce": base64.b64encode(nonce).decode(),
             "ciphertext": base64.b64encode(ciphertext).decode(),
             "tag": base64.b64encode(tag).decode()
@@ -68,11 +69,10 @@ def load_encrypted_data(filename):
     try:
         with open(filename, 'r') as f:
             data = json.load(f)
-            key = base64.b64decode(data["key"])
             nonce = base64.b64decode(data["nonce"])
             ciphertext = base64.b64decode(data["ciphertext"])
             tag = base64.b64decode(data["tag"])
-            return key, nonce, ciphertext, tag
+            return nonce, ciphertext, tag
     except FileNotFoundError:
         print(f"Error: File {filename} not found.")
         return None
@@ -81,18 +81,25 @@ def load_encrypted_data(filename):
         return None
 
 
-# Decrypt message function
+# Decrypt message function, requiring key input for decryption
 
-def decrypt_message(key, nonce, ciphertext, tag):
-
-    # Decrypt
-    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
-    decrypted = cipher.decrypt(ciphertext)
+def decrypt_message(nonce, ciphertext, tag):
     try:
-        cipher.verify(tag)
-        print(f"Decrypted message: {decrypted.decode()}")
+        key_input = input("Enter the base64-encoded AES key: ")
+        if not key_input:  # check for empty input
+            print("Error: No key provided.")
+            return
+        key = base64.b64decode(key_input)
+        if len(key) != 32:  # key must be 32 bytes
+            print("Error: Invalid key length.")
+            return
+        cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+        plaintext = cipher.decrypt_and_verify(ciphertext, tag)
+        print(f"Decrypted message: {plaintext.decode()}")
+    except binascii.Error:
+        print("Error: Invalid base64-encoded key.")
     except ValueError:
-        print("Decryption failed: Key or data is incorrect/corrupted")
+        print("Error: Incorrect key or corrupted data.")
 
 
 # List wallet files function
@@ -104,11 +111,11 @@ def list_wallet_files():
 
 
 def main():
-    key, nonce, ciphertext, tag = None, None, None, None
+    nonce, ciphertext, tag = None, None, None
     while True:
         choice = main_menu()
         if choice == 1:
-            key, nonce, ciphertext, tag = encrypt_message()
+            _, nonce, ciphertext, tag = encrypt_message()  # key is unused variable
         elif choice == 2:
             wallet_files = list_wallet_files()
             if not wallet_files:
@@ -123,8 +130,8 @@ def main():
                 if 1 <= file_choice <= len(wallet_files):
                     result = load_encrypted_data(wallet_files[file_choice - 1])
                     if result:
-                        key, nonce, ciphertext, tag = result
-                        decrypt_message(key, nonce, ciphertext, tag)
+                        nonce, ciphertext, tag = result
+                        decrypt_message(nonce, ciphertext, tag)
                 else:
                     print("Invalid file number.")
             except ValueError:
