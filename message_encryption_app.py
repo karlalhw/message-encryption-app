@@ -11,7 +11,7 @@ import binascii
 
 
 def main_menu():
-    print("Crypto App Menu:")
+    print("Message Encryption App Menu:")
     print("1. Encrypt a message")
     print("2. Decrypt a message")
     print("3. Exit")
@@ -28,7 +28,7 @@ def main_menu():
             print("Invalid input. Please enter a number between 1 and 3.")
 
 
-# Encrypts a wallet private key with AES-256 and saves to a unique JSON file
+# Encrypts a message private key with AES-256 and saves to a unique JSON file
 
 def encrypt_message():
     key = get_random_bytes(32)
@@ -42,7 +42,7 @@ def encrypt_message():
     encoded_ciphertext = base64.b64encode(ciphertext).decode()
     print(f"Encrypted message (base64): {encoded_ciphertext}")
     # Generate .JSON file name via datetime and save encrypted data
-    filename = f"wallet_data{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.json"
+    filename = f"message{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.json"
     save_encrypted_data(nonce, ciphertext, tag, filename)
     return key, nonce, ciphertext, tag
 
@@ -102,10 +102,10 @@ def decrypt_message(nonce, ciphertext, tag):
         print("Error: Incorrect key or corrupted data.")
 
 
-# List wallet files function
+# List message files function
 
-def list_wallet_files():
-    return [f for f in os.listdir() if fnmatch.fnmatch(f, "wallet_data*.json")]
+def list_message_files():
+    return [f for f in os.listdir() if fnmatch.fnmatch(f, "message*.json")]
 
 # Main loop function
 
@@ -117,18 +117,19 @@ def main():
         if choice == 1:
             _, nonce, ciphertext, tag = encrypt_message()  # key is unused variable
         elif choice == 2:
-            wallet_files = list_wallet_files()
-            if not wallet_files:
-                print("No wallet data files found.")
+            message_files = list_message_files()
+            if not message_files:
+                print("No message data files found.")
                 continue
             print("Select a file to decrypt:")
-            for i, file in enumerate(wallet_files, 1):
+            for i, file in enumerate(message_files, 1):
                 print(f"{i}: {file}")
             try:
                 file_choice = int(
-                    input("Enter file number (1-{}):".format(len(wallet_files))))
-                if 1 <= file_choice <= len(wallet_files):
-                    result = load_encrypted_data(wallet_files[file_choice - 1])
+                    input("Enter file number (1-{}):".format(len(message_files))))
+                if 1 <= file_choice <= len(message_files):
+                    result = load_encrypted_data(
+                        message_files[file_choice - 1])
                     if result:
                         nonce, ciphertext, tag = result
                         decrypt_message(nonce, ciphertext, tag)
@@ -138,7 +139,7 @@ def main():
                 print("Invalid input. Please enter a number.")
 
         elif choice == 3:
-            print("Exiting Crypto App...")
+            print("Exiting Message Encryption App...")
             break
 
 
