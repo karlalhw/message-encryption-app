@@ -210,4 +210,4 @@ __marimo__/
 message*.json
 
 # Ignore crypto_app_backup.py
-crypto_app_backup
+crypto_app_backup.py
