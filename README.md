@@ -1,4 +1,4 @@
-# crypto-app
+# message-encryption-app
 A command-line Python app for creating and saving encrypted messages (via AES-256) as JSON files that can be decrypted by a key.
 
 Features:
